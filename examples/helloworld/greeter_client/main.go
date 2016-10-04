@@ -90,4 +90,29 @@ func main() {
 
 	reply, _ := clientSideStream.CloseAndRecv()
 	log.Printf("Greeting (client-side streaming): %s", reply.Message)
+
+	// Contact the bi-directional streaming server
+	biDirectionalStream, _ := c.SayHelloBiDirectionalStream(context.Background())
+
+	waitc := make(chan struct{})
+	go func() {
+		for {
+			in, err := biDirectionalStream.Recv()
+			if err == io.EOF {
+				close(waitc)
+				return
+			}
+			if err != nil {
+				log.Fatalf("Failed to receive a note : %v", err)
+			}
+			log.Printf("Greeting (bi-directional streaming): %s", in.Message)
+		}
+	}()
+
+	for _, num := range nums {
+		biDirectionalStream.Send(&pb.HelloRequest{Name: name + strconv.Itoa(num)})
+	}
+
+	biDirectionalStream.CloseSend()
+	<- waitc
 }

@@ -82,6 +82,22 @@ func (s *server) SayHelloClientStream(stream pb.Greeter_SayHelloClientStreamServ
 	return nil
 }
 
+func (s *server) SayHelloBiDirectionalStream(stream pb.Greeter_SayHelloBiDirectionalStreamServer) error {
+	for {
+		message, err := stream.Recv()
+
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		reply := pb.HelloReply{Message: "Hello " + message.Name}
+		stream.Send(&reply)
+	}
+}
+
 func main() {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
