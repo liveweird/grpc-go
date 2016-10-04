@@ -36,6 +36,7 @@ package main
 import (
 	"log"
 	"os"
+	"io"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -66,4 +67,15 @@ func main() {
 		log.Fatalf("could not greet: %v", err)
 	}
 	log.Printf("Greeting: %s", r.Message)
+
+	// Contact the server-side streaming server
+	stream, _ := c.SayHelloServerStream(context.Background(), &pb.HelloRequest{Name: name})
+
+	for {
+    message, err := stream.Recv()
+    if err == io.EOF {
+        break
+    }
+    log.Println(message)
+	}
 }

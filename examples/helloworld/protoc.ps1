@@ -1,0 +1,1 @@
+C:\Tools\protoc-3.1.0-win32\bin\protoc.exe -I ./helloworld/ ./helloworld/helloworld.proto --go_out=plugins=grpc:helloworld

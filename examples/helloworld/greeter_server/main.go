@@ -36,6 +36,7 @@ package main
 import (
 	"log"
 	"net"
+	"strconv"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -52,6 +53,14 @@ type server struct{}
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
+}
+
+func (s *server) SayHelloServerStream(in *pb.HelloRequest, stream pb.Greeter_SayHelloServerStreamServer) error {
+	for i := 0; i <= 9; i++ {
+		message := pb.HelloReply{Message: "Hello " + in.Name + strconv.Itoa(i)}
+		stream.Send(&message)
+	}
+	return nil
 }
 
 func main() {
