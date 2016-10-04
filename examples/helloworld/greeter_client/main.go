@@ -37,6 +37,7 @@ import (
 	"log"
 	"os"
 	"io"
+	"strconv"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -66,16 +67,27 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
-	log.Printf("Greeting: %s", r.Message)
+	log.Printf("Greeting (simple): %s", r.Message)
 
 	// Contact the server-side streaming server
-	stream, _ := c.SayHelloServerStream(context.Background(), &pb.HelloRequest{Name: name})
+	serverSideStream, _ := c.SayHelloServerStream(context.Background(), &pb.HelloRequest{Name: name})
 
 	for {
-    message, err := stream.Recv()
+    message, err := serverSideStream.Recv()
     if err == io.EOF {
         break
     }
-    log.Println(message)
+		log.Printf("Greeting (server-side streaming): %s", message)
 	}
+
+	// Contact the client-side streaming server
+	clientSideStream, _ := c.SayHelloClientStream(context.Background())
+	nums := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+	for _, num := range nums {
+		clientSideStream.Send(&pb.HelloRequest{Name: name + strconv.Itoa(num)})
+	}
+
+	reply, _ := clientSideStream.CloseAndRecv()
+	log.Printf("Greeting (client-side streaming): %s", reply.Message)
 }

@@ -37,6 +37,8 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"io"
+	"strings"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -59,6 +61,23 @@ func (s *server) SayHelloServerStream(in *pb.HelloRequest, stream pb.Greeter_Say
 	for i := 0; i <= 9; i++ {
 		message := pb.HelloReply{Message: "Hello " + in.Name + strconv.Itoa(i)}
 		stream.Send(&message)
+	}
+	return nil
+}
+
+func (s *server) SayHelloClientStream(stream pb.Greeter_SayHelloClientStreamServer) error {
+	response := make([]string, 10)
+	for {
+		message, err := stream.Recv()
+
+		if err == io.EOF {
+			return stream.SendAndClose(&pb.HelloReply{Message: strings.Join(response, "\n")})
+		}
+		if err != nil {
+			return err
+		}
+
+		response = append(response, "Hello " + message.Name)
 	}
 	return nil
 }
